@@ -35,7 +35,16 @@
 #if FELUCCA_ADPCM && !FELUCCA_SLICE
 #error "FELUCCA_ADPCM needs FELUCCA_SLICE (ADPCM is engine 14, after SLICE)"
 #endif
-#define NENGINES (13 + FELUCCA_SLICE + FELUCCA_ADPCM)   /* SLICE (13), then ADPCM (14): the other engines keep their
+#ifndef FELUCCA_KIT
+#define FELUCCA_KIT 1           /* the KIT drum engine (engines/src/eng_kit.c), engine 14 (the ADPCM slot: not with ADPCM) */
+#endif
+#if FELUCCA_KIT && FELUCCA_ADPCM
+#error "FELUCCA_KIT and FELUCCA_ADPCM both want engine 14"
+#endif
+#if FELUCCA_KIT && !FELUCCA_SLICE
+#error "FELUCCA_KIT needs FELUCCA_SLICE (KIT is engine 14, after SLICE)"
+#endif
+#define NENGINES (13 + FELUCCA_SLICE + FELUCCA_ADPCM + FELUCCA_KIT)   /* SLICE (13), then ADPCM (14): the other engines keep their
                                                          * numbers */
 #define ENGI_ADPCM 14u
 #define ENGI_DIGITAL 1u          /* reserved without FELUCCA_FM4: never selectable (eng_ok), its sounds load as FM6 */

@@ -36,6 +36,9 @@ static uint8_t eng_mem_owner[NPART];       /* engine index + 1 whose state is in
 #include "eng_phys.c"           /* PHYS: DaisySP physical models (phys_dsp.c, MIT) */
 #include "eng_drum.c"           /* DRUM: the 8-lane kit (drum_voice.c) */
 #include "../engines/src/eng_noise.c"
+#if FELUCCA_KIT
+#include "../engines/src/eng_kit.c"     /* KIT: synthesised drum voices, fixed point */
+#endif
 #include "eng_fm6.c"            /* FM6: 6-operator FM, msfa ported (fm6_core.c, Apache-2.0) */
 #include "fm4_convert.c"        /* DIGITAL's tables, and its sounds -> FM6 */
 #if FELUCCA_FM4
@@ -72,6 +75,9 @@ static const engine_t *const ENGINES[NENGINES] = {
 #endif
 #if FELUCCA_ADPCM
     &ENG_ADPCM,                  /* 14 (ENGI_ADPCM; FELUCCA_ADPCM=0 builds without it) */
+#endif
+#if FELUCCA_KIT
+    &ENG_KIT,                    /* 14 (FELUCCA_KIT=0 builds without it) */
 #endif
 };
 
@@ -135,6 +141,9 @@ static const uint8_t ENGINE_ORDER[NENG_SHOWN] = {
     10,                          /* DRUM */
 #if FELUCCA_ADPCM
     14,                          /* ADPCM (1.8): last, so the EDIT layer's white keys keep the 13 above (ui_layer.c LY_ENG_KEYS) */
+#endif
+#if FELUCCA_KIT
+    14,                          /* KIT */
 #endif
 };
 
