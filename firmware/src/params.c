@@ -89,6 +89,22 @@ static const param_desc_t TP[P_COUNT] = {
     [P_DEC] = PD("DEC", F_TIME, 0, 127, 70),
     [P_SUS] = PD("SUS", F_PCT, 0, 127, 90),
     [P_REL] = PD("REL", F_TIME, 0, 127, 60),
+    [P_KS0] = PD("TUNE", F_BIPCT, -64, 63, 0),
+    [P_KS1] = PD("DECAY", F_PCT, 0, 127, 50),
+    [P_KS2] = PD("TUNE", F_BIPCT, -64, 63, 0),
+    [P_KS3] = PD("DECAY", F_PCT, 0, 127, 50),
+    [P_KS4] = PD("TUNE", F_BIPCT, -64, 63, 0),
+    [P_KS5] = PD("DECAY", F_PCT, 0, 127, 50),
+    [P_KS6] = PD("TUNE", F_BIPCT, -64, 63, 0),
+    [P_KS7] = PD("DECAY", F_PCT, 0, 127, 50),
+    [P_KS8] = PD("TUNE", F_BIPCT, -64, 63, 0),
+    [P_KS9] = PD("DECAY", F_PCT, 0, 127, 50),
+    [P_KS10] = PD("TUNE", F_BIPCT, -64, 63, 0),
+    [P_KS11] = PD("DECAY", F_PCT, 0, 127, 50),
+    [P_KSX0] = PD("-", F_INT, 0, 0, 0),
+    [P_KSX1] = PD("-", F_INT, 0, 0, 0),
+    [P_KSX2] = PD("-", F_INT, 0, 0, 0),
+    [P_KSX3] = PD("-", F_INT, 0, 0, 0),
     [P_ED_FLT] = PD("FLT", F_BIPCT, -64, 63, 0),
     [P_ED_PIT] = PD("PIT", F_BIPCT, -64, 63, 0),
     [P_ED_SHP] = PD("SHP", F_BIPCT, -64, 63, 0),
@@ -474,6 +490,10 @@ static const page_t PAGES[] = {
     {"FILTER", FAM_EDIT, SC_TRACK, GR_NONE, {P_FTYPE, P_E4, P_E5, P_E7}},   /* ANALOG only (1.5, #104): TYPE CUT RES KTR */
     {"LANES", FAM_EDIT, SC_TRACK, GR_NONE, {P_LN0, P_LN1, P_LN2, P_LN3}},   /* DRUM only: the lane levels */
     {"LANES 2", FAM_EDIT, SC_TRACK, GR_NONE, {P_LN4, P_LN5, P_LN6, P_LN7}},
+    /* KIT, TYPE = KIT only: each of the six lanes' own sound (SND n; ui.c page_visible) */
+    {"SND 1-2", FAM_EDIT, SC_TRACK, GR_NONE, {P_KS0, P_KS1, P_KS2, P_KS3}},
+    {"SND 3-4", FAM_EDIT, SC_TRACK, GR_NONE, {P_KS4, P_KS5, P_KS6, P_KS7}},
+    {"SND 5-6", FAM_EDIT, SC_TRACK, GR_NONE, {P_KS8, P_KS9, P_KS10, P_KS11}},
     {"SLICES", FAM_EDIT, SC_TRACK, GR_SLICES, {0xFF, 0xFF, 0xFF, 0xFF}},   /* SLICE only: the slices by hand (ui_slice.c) */
     {"OPERATOR", FAM_EDIT, SC_TRACK, GR_FMOP, {0xFF, 0xFF, 0xFF, 0xFF}},    /* FM6 only: KNOB 1 the operator, then its */
     {"OP ENV", FAM_EDIT, SC_TRACK, GR_FMENV, {0xFF, 0xFF, 0xFF, 0xFF}},     /* bytes of the track's patch (ui_fm6op.c): */

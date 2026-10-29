@@ -37,6 +37,7 @@ static uint8_t eng_mem_owner[NPART];       /* engine index + 1 whose state is in
 #include "eng_drum.c"           /* DRUM: the 8-lane kit (drum_voice.c) */
 #include "../engines/src/eng_noise.c"
 #if FELUCCA_KIT
+#define KIT_LANE_SND(t, lane, k, def) ((k) <= 1 ? (t)->p[P_KS0 + (lane) * 2 + (k)] : (def))
 #define KIT_LANE_LEVEL(t, lane) ((t)->p[P_LN0 + (lane)])   /* the mixer: GLO > DRUM MIX (params.c, ui.c page_visible) */
 #include "../engines/src/eng_kit.c"     /* KIT: synthesised drum voices, fixed point */
 #endif

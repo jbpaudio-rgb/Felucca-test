@@ -434,6 +434,13 @@ static int page_visible(uint32_t i)
 #endif
         return TSEL->eng_req % NENGINES == ENGI_DRUM;
     }
+#if FELUCCA_KIT
+    if (PAGES[i].id[0] >= P_KS0 && PAGES[i].id[0] <= P_KS11)   /* SND 1..6: KIT's TYPE = KIT (12, eng_kit.c K_KITMODE) */
+        return ENGINES[TSEL->eng_req % NENGINES] == &ENG_KIT && TSEL->p[P_E0] == 12;
+#else
+    if (PAGES[i].id[0] >= P_KS0 && PAGES[i].id[0] <= P_KS11)
+        return 0;
+#endif
     if (PAGES[i].id[0] == P_FTYPE)                    /* FILTER (1.5, #104): ANALOG's */
         return ENGINES[TSEL->eng_req % NENGINES] == &ENG_ANALOG;
     if (PAGES[i].graph >= GR_FMOP && PAGES[i].graph <= GR_FMENV)
