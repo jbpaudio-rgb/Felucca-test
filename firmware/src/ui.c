@@ -156,13 +156,13 @@ static uint8_t sync_reload;                  /* engine / preset / project / user
 #ifndef FELUCCA_PROTO
 #define FELUCCA_PROTO 1
 #endif
-#define PR_CELL_W 114
-#define PR_CELL_H 30
-#define PR_CELL_X(c) (3 + 117 * (int32_t)((c) & 1u))
-#define PR_CELL_Y(c) (Y_LABEL + 33 * (int32_t)((c) >> 1))
-#define PR_CARD_H 64
-#define PR_Y_GRAPH 96
-#define PR_H_GRAPH 102
+#define PR_CELL_W 112
+#define PR_CELL_H 46
+#define PR_CELL_X(c) (6 + 116 * (int32_t)((c) & 1u))
+#define PR_CELL_Y(c) (Y_LABEL + 4 + 50 * (int32_t)((c) >> 1))
+#define PR_CARD_H 100
+#define PR_Y_GRAPH 130
+#define PR_H_GRAPH 108
 #define LG_CARD_H 104
 #define LG_Y_GRAPH 136
 #define LG_H_GRAPH 62

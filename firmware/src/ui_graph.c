@@ -2281,9 +2281,10 @@ static void draw_graph(void)
         return;
     ui.graph_sig = sig;
     cv_begin(240, graph_h(), T_BG);
-    cv_rrect(3, 0, 234, graph_h(), 5, T_SURF, T_BG);   /* the panel (MENU > LARGE: the strip) */
-    cv_bg = T_SURF;                                  /* (text drawn with cv_text lands on it) */
-    cv_oy = large_kind() == LK_PROTO ? 1 : GOY;      /* graphs on a 100 px scale */
+    if (large_kind() != LK_PROTO)                    /* (the prototype: the graph straight on the black) */
+        cv_rrect(3, 0, 234, graph_h(), 5, T_SURF, T_BG);   /* the panel (MENU > LARGE: the strip) */
+    cv_bg = large_kind() == LK_PROTO ? T_BG : T_SURF;   /* (text drawn with cv_text lands on it) */
+    cv_oy = large_kind() == LK_PROTO ? 4 : GOY;      /* graphs on a 100 px scale */
     if (strip_kind() != SK_NONE) {                   /* MENU > LARGE: the strip */
         uint32_t k = strip_kind();
         cv_oy = k == SK_ADSR || k == SK_LFO ? 3 : 0;

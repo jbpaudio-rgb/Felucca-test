@@ -321,8 +321,39 @@ static void head_group(void)
     GFX_HOOK_ALIGN(0, 0, 0, H_HEAD, AL_V, "header text on its middle");
     cv_text(x + 4, HEAD_MY, &AF_M, b, T_THEME);
 }
+/* FELUCCA_PROTO: in place of the header, the prototype's title, centred: the engine's name on the EDIT pages, else the page's */
+static void draw_head_proto(void)
+{
+    char ti[24];
+    uint32_t sig;
+    int32_t n;
+    if (cur_page()->fam == FAM_EDIT)
+        str_cpy(ti, ENGINES[TSEL->eng_req % NENGINES]->name, sizeof ti);
+    else
+        page_title(ti);
+    n = (int32_t)str_len(ti);
+    while (n > 0 && ti[n - 1] != ' ' && ti[n - 1] != '/' && (ti[n - 1] < '0' || ti[n - 1] > '9'))
+        n--;
+    if (n > 0 && (ti[n - 1] == '/' || (ti[n - 1] >= '0' && ti[n - 1] <= '9'))) {   /* "ENV 1/2": the number dropped */
+        while (n > 0 && ti[n - 1] != ' ')
+            n--;
+        if (n > 0)
+            ti[n - 1] = 0;
+    }
+    sig = str_hash(0x7A11u, ti);
+    if (!ui.force && sig == ui.head_sig)
+        return;
+    ui.head_sig = sig;
+    cv_begin(240, 28, T_BG);
+    cv_text_in(0, 6, 240, &AF_M, ti, T_TEXT, T_BG);
+    cv_blit(0, 0);
+}
 static void draw_head(void)
 {
+    if (large_kind() == LK_PROTO) {
+        draw_head_proto();
+        return;
+    }
     static int16_t metro_x = -1;                       /* the metronome's ink as drawn (-1: hidden), its beat */
     static int8_t metro_beat;
     char b[16];
@@ -440,11 +471,8 @@ static void gap_rows(uint32_t y0, uint32_t y1)
 static void draw_gaps(uint32_t y, uint32_t h)
 {
     uint32_t i;
-    if (large_kind() == LK_PROTO) {                     /* the 2 x 2 grid: BG left, between and right of its cells */
-        lcd_fill(0, y, 3, h, T_BG);
-        lcd_fill(117, y, 3, h, T_BG);
-        lcd_fill(234, y, 6, h, T_BG);
-        lcd_fill(3, y + 30, 231, 3, T_BG);
+    if (large_kind() == LK_PROTO) {                     /* the 2 x 2 grid: all BG, the cells drawn over it */
+        lcd_fill(0, y, 240, h, T_BG);
         return;
     }
     lcd_fill(0, y, (uint32_t)CARD_X(0), h, T_BG);
@@ -464,7 +492,8 @@ static void draw_frame(void)
     uint32_t ch = card_h(), gy = graph_y(), gh = graph_h();   /* (MENU > LARGE: tall cards, a strip) */
     gap_rows(H_HEAD, Y_LABEL);
     gap_rows(Y_LABEL + ch, gy);
-    gap_rows(gy + gh, Y_FOOT);
+    if (gy + gh < Y_FOOT)
+        gap_rows(gy + gh, Y_FOOT);
     draw_gaps(Y_LABEL, ch);
 }
 
@@ -649,35 +678,35 @@ static void draw_column_tall(uint32_t c, const char *label, const char *val, con
 static void draw_column_proto(uint32_t c, const char *label, const char *val, const char *unit, uint16_t vc, int32_t ratio,
                               int hot, int mot, int32_t kid)
 {
-    uint16_t lc = hot ? T_ACCENT : mot ? T_THEME : T_MID, kc = hot ? T_ACCENT : vc == T_DIM ? T_DIM : T_TEXT;
+    const uint16_t BLUE = 0x22F5, FACE = 0xEF9E, DARK = 0x2104;   /* the prototype's knob: blue ring, light cap */
+    uint16_t lc = hot ? T_ACCENT : mot ? T_THEME : T_MID;
     const aafont_t *vf = &AF_M;
-    int32_t room = PR_CELL_W - 36, uw = unit[0] ? text_w(&AF_S, unit) + 3 : 0, x;
-    cv_begin(PR_CELL_W, PR_CELL_H + 3, T_BG);
-    cv_rrect(0, 0, PR_CELL_W, PR_CELL_H, 4, T_SURF, T_BG);
+    int32_t room = PR_CELL_W - 52, uw = unit[0] ? text_w(&AF_S, unit) + 3 : 0, x;
+    cv_begin(PR_CELL_W, PR_CELL_H, T_BG);
     if (!label[0] && !val[0]) {                         /* a knob that does nothing on this page */
         cv_blit((uint32_t)PR_CELL_X(c), (uint32_t)PR_CELL_Y(c));
         return;
     }
-    cv_rrect(3, 3, 24, 24, 12, T_RAISE, T_SURF);        /* the knob: its ring, its cap, the pointer */
-    cv_rrect(6, 6, 18, 18, 9, vc == T_DIM ? T_KEY : T_BG, T_RAISE);
+    cv_rrect(2, 6, 36, 36, 18, vc == T_DIM ? T_KEY : hot ? T_ACCENT : BLUE, T_BG);   /* the knob */
+    cv_rrect(6, 10, 28, 28, 14, vc == T_DIM ? T_RAISE : FACE, T_BG);
     if (ratio >= 0) {
         int32_t deg = ratio * 27 / 100 - 135;
         uint32_t ph = (uint32_t)(deg * 11930464);
-        int32_t dx = osc_sine(ph) * 7 / 32768, dy = -osc_sine(ph + 0x40000000u) * 7 / 32768;
-        cv_line_t(15, 15, 15 + dx, 15 + dy, kc, 2);
+        int32_t dx = osc_sine(ph) * 11 / 32768, dy = -osc_sine(ph + 0x40000000u) * 11 / 32768;
+        cv_line_t(20, 24, 20 + dx, 24 + dy, DARK, 2);
     } else {
-        cv_rrect(13, 13, 4, 4, 2, kc, T_BG);
+        cv_rrect(18, 22, 4, 4, 2, DARK, FACE);
     }
     if (label[0])
-        cv_text_fit(33, 2, &AF_S, label, lc, T_SURF, room);
+        cv_text_fit(44, 6, &AF_S, label, lc, T_BG, room);
     if (kid >= 0) {
-        cv_keycap(33, 13, (uint32_t)kid, vc == T_ACCENT || vc == T_DIM ? vc : T_KEY, T_INK, T_SURF);
+        cv_keycap(44, 22, (uint32_t)kid, vc == T_ACCENT || vc == T_DIM ? vc : T_KEY, T_INK, T_BG);
     } else if (val[0]) {
         if (text_w(vf, val) + uw > room)
             vf = &AF_S;
-        x = cv_text_fit(33, vf == &AF_M ? 13 : 16, vf, val, vc, T_SURF, room - uw);
+        x = cv_text_fit(44, vf == &AF_M ? 21 : 24, vf, val, hot ? T_ACCENT : vc == T_DIM ? vc : T_TEXT, T_BG, room - uw);
         if (unit[0])
-            cv_text_on(x + 3, 16, &AF_S, unit, T_MID, T_SURF);
+            cv_text_on(x + 3, 24, &AF_S, unit, T_MID, T_BG);
     }
     cv_blit((uint32_t)PR_CELL_X(c), (uint32_t)PR_CELL_Y(c));
 }
@@ -1687,6 +1716,7 @@ static void ui_draw_page(uint32_t counting)
     if (ui.help_t)
         ui.help_t--;
     felucca_dbg.stage = 6;
-    draw_foot();
+    if (large_kind() != LK_PROTO)                       /* (the prototype shows no footer) */
+        draw_foot();
     ui.force = 0;
 }
