@@ -446,17 +446,35 @@ static void graph_fx(const track_t *t, uint16_t c)
         cv_rrect(x - 4, 85 - h, 12, 6, 3, c, T_SURF);
     }
 }
-/* KIT's drum mixer: the six lane levels as faders, the ones the four knobs hold (this page's) in the THEME colour */
+/* KIT's drum mixer as in the prototype: six strips, each a cream label with its drum's name, a 14-segment well and a cap with
+ * a red line; the four strips the knobs hold (this page's) framed in the accent */
 static void graph_dmix(const track_t *t, const page_t *pg, uint16_t c)
 {
     uint32_t i, first = pg->id[0] == P_LN4 ? 4u : 0u, last = first ? 6u : 4u;
+    (void)c;
     for (i = 0; i < 6u; i++) {
-        int32_t h = t->p[P_LN0 + i] * 76 / 127, x = PANEL_X0 + 16 + (int32_t)i * 36;
-        uint16_t col = i >= first && i < last ? c : T_MID;
-        cv_rrect(x, 6, 4, 82, 2, T_RAISE, T_SURF);
-        if (h > 3)
-            cv_rrect(x, 88 - h, 4, h, 2, col, T_RAISE);
-        cv_rrect(x - 4, 85 - h, 12, 6, 3, col, T_SURF);
+        int32_t lv = clamp(t->p[P_LN0 + i], 0, 127), k = (lv * 14 + 63) / 127, x = PANEL_X0 + 1 + (int32_t)i * 36, j;
+        const char *nm = "";
+#if FELUCCA_KIT
+        {
+            const param_desc_t *d = ENG_KIT.desc ? ENG_KIT.desc(t, i + 1u) : 0;
+            if (d && d->names)
+                nm = d->names[clamp(t->p[P_E1 + i], d->min, d->max)];
+        }
+#endif
+        if (i >= first && i < last) {                 /* the frame */
+            cv_rect(x, 4, 34, 1, T_ACCENT);
+            cv_rect(x, 89, 34, 1, T_ACCENT);
+            cv_rect(x, 4, 1, 86, T_ACCENT);
+            cv_rect(x + 33, 4, 1, 86, T_ACCENT);
+        }
+        cv_rect(x + 2, 6, 30, 13, T_TEXT);            /* the label */
+        cv_text_in(x + 2, 6 + CAP_IN(S, 13), 30, &AF_S, nm, T_INK, T_TEXT);
+        for (j = 0; j < 14; j++)                      /* the well, lit from the bottom */
+            cv_rect(x + 12, 24 + (13 - j) * 4, 10, 3, j < k ? T_TEXT : T_RAISE);
+        j = 76 - lv * 50 / 127;                       /* the cap */
+        cv_rect(x + 6, j, 22, 6, T_TEXT);
+        cv_rect(x + 6, j + 2, 22, 2, T_ACCENT);
     }
 }
 /* INSERT pages (1.5, fx.c track_insert): the drives and CRUSH as their curve, input (-1.5 .. +1.5 of a voice's full
