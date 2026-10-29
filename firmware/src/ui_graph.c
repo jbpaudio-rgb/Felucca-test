@@ -446,6 +446,19 @@ static void graph_fx(const track_t *t, uint16_t c)
         cv_rrect(x - 4, 85 - h, 12, 6, 3, c, T_SURF);
     }
 }
+/* KIT's drum mixer: the six lane levels as faders, the ones the four knobs hold (this page's) in the THEME colour */
+static void graph_dmix(const track_t *t, const page_t *pg, uint16_t c)
+{
+    uint32_t i, first = pg->id[0] == P_LN4 ? 4u : 0u, last = first ? 6u : 4u;
+    for (i = 0; i < 6u; i++) {
+        int32_t h = t->p[P_LN0 + i] * 76 / 127, x = PANEL_X0 + 16 + (int32_t)i * 36;
+        uint16_t col = i >= first && i < last ? c : T_MID;
+        cv_rrect(x, 6, 4, 82, 2, T_RAISE, T_SURF);
+        if (h > 3)
+            cv_rrect(x, 88 - h, 4, h, 2, col, T_RAISE);
+        cv_rrect(x - 4, 85 - h, 12, 6, 3, col, T_SURF);
+    }
+}
 /* INSERT pages (1.5, fx.c track_insert): the drives and CRUSH as their curve, input (-1.5 .. +1.5 of a voice's full
  * scale) across, output up, dry and wet blended by MIX (fx.c ins_shape: the same shape; the dry diagonal RAISE); the
  * swept ones as two cycles of their sweep, as deep as DEPTH (FLANG the squared triangle, CHOR a sine, PHASR a
@@ -2288,6 +2301,9 @@ static void draw_graph(void)
         case GR_CHORD:
             cv_oy = 0;
             graph_chord(t, c);
+            break;
+        case GR_DMIX:
+            graph_dmix(t, pg, c);
             break;
         case GR_FX:
             graph_fx(t, c);
