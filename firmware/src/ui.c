@@ -151,6 +151,18 @@ static uint8_t sync_reload;                  /* engine / preset / project / user
 #define H_FOOT 38
 /* MENU > LARGE (large_kind below): on the value pages the cards are tall (28..132) and the panel a strip
  * (136..198); elsewhere (lists, rolls, layers) the layout above, its card labels in M */
+/* FELUCCA_PROTO: the prototype's layout on the value pages: the four knobs as a 2 x 2 grid of cells (a round knob, the label, the
+ * value), the panel under it (ui_draw.c draw_column_proto) */
+#ifndef FELUCCA_PROTO
+#define FELUCCA_PROTO 1
+#endif
+#define PR_CELL_W 114
+#define PR_CELL_H 30
+#define PR_CELL_X(c) (3 + 117 * (int32_t)((c) & 1u))
+#define PR_CELL_Y(c) (Y_LABEL + 33 * (int32_t)((c) >> 1))
+#define PR_CARD_H 64
+#define PR_Y_GRAPH 96
+#define PR_H_GRAPH 102
 #define LG_CARD_H 104
 #define LG_Y_GRAPH 136
 #define LG_H_GRAPH 62
@@ -380,12 +392,26 @@ static const page_t *cur_page(void) { return page_over ? page_over : &PAGES[ui.p
  *            AUTOMATION, SLICES), HOME with MENU > HOME TRACKS (1.3) and the quick layers' maps: the layout as it
  *            is, the card labels in M;
  *   LK_OFF   LARGE off; the menu (its own LARGE: ui_menu.c), the dialogs and NAME keep their own layout in every case. */
-enum { LK_OFF, LK_LABEL, LK_TALL };
+enum { LK_OFF, LK_LABEL, LK_TALL, LK_PROTO };
+static int detail_on(void);
+static uint32_t act_cols(void);
+/* the pages that draw their four cards through the generic path (ui_draw.c draw_columns' end): the 2 x 2 grid fits them */
+static int proto_page(void)
+{
+    uint32_t g;
+    if (!FELUCCA_PROTO || ui.layer || ui.home || ui.menu || ui.confirm)
+        return 0;
+    g = cur_page()->graph;
+    if (cur_page()->scope == SC_TRK || detail_on() || act_cols() || ui.ml.on)
+        return 0;
+    return g == GR_NONE || g == GR_ADSR || g == GR_LFO || g == GR_FX || g == GR_SCALE || g == GR_DMIX || g == GR_INS ||
+           g == GR_SLCR || g == GR_CHORD;
+}
 static uint32_t large_kind(void)
 {
     uint32_t g;
     if (!(ui_prefs & PREF_LARGE))
-        return LK_OFF;
+        return proto_page() ? LK_PROTO : LK_OFF;
     if (ui.layer)
         return LK_LABEL;
     if (ui.home)                                        /* (HOME > TRACKS: its rows need the panel, the cards as on */
@@ -395,9 +421,9 @@ static uint32_t large_kind(void)
            g == GR_SLICES || g == GR_EVENTS ? LK_LABEL : LK_TALL;
 }
 /* the geometry of the page shown: the cards' height, the panel's top and height */
-static uint32_t card_h(void) { return large_kind() == LK_TALL ? LG_CARD_H : CARD_H; }
-static uint32_t graph_y(void) { return large_kind() == LK_TALL ? LG_Y_GRAPH : Y_GRAPH; }
-static uint32_t graph_h(void) { return large_kind() == LK_TALL ? LG_H_GRAPH : H_GRAPH; }
+static uint32_t card_h(void) { uint32_t k = large_kind(); return k == LK_TALL ? LG_CARD_H : k == LK_PROTO ? PR_CARD_H : CARD_H; }
+static uint32_t graph_y(void) { uint32_t k = large_kind(); return k == LK_TALL ? LG_Y_GRAPH : k == LK_PROTO ? PR_Y_GRAPH : Y_GRAPH; }
+static uint32_t graph_h(void) { uint32_t k = large_kind(); return k == LK_TALL ? LG_H_GRAPH : k == LK_PROTO ? PR_H_GRAPH : H_GRAPH; }
 static int large_face_has(const char *s)                /* every glyph of s in the sparse L face */
 {
     for (; *s; s++)

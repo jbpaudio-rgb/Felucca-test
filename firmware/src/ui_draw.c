@@ -440,6 +440,13 @@ static void gap_rows(uint32_t y0, uint32_t y1)
 static void draw_gaps(uint32_t y, uint32_t h)
 {
     uint32_t i;
+    if (large_kind() == LK_PROTO) {                     /* the 2 x 2 grid: BG left, between and right of its cells */
+        lcd_fill(0, y, 3, h, T_BG);
+        lcd_fill(117, y, 3, h, T_BG);
+        lcd_fill(234, y, 6, h, T_BG);
+        lcd_fill(3, y + 30, 231, 3, T_BG);
+        return;
+    }
     lcd_fill(0, y, (uint32_t)CARD_X(0), h, T_BG);
     for (i = 0; i < 4u; i++) {                          /* right of each column */
         uint32_t x = (uint32_t)(CARD_X(i) + CARD_W), w = i < 3u ? (uint32_t)CARD_X(i + 1u) - x : 240u - x;
@@ -637,6 +644,44 @@ static void draw_column_tall(uint32_t c, const char *label, const char *val, con
     cv_blit((uint32_t)CARD_X(c), Y_LABEL);
 }
 
+/* FELUCCA_PROTO (ui.c LK_PROTO): a knob as the prototype shows it, a cell of the 2 x 2 grid: a round knob whose pointer
+ * follows the value (ratio 0..1000, -1: none), the label above the value and its unit */
+static void draw_column_proto(uint32_t c, const char *label, const char *val, const char *unit, uint16_t vc, int32_t ratio,
+                              int hot, int mot, int32_t kid)
+{
+    uint16_t lc = hot ? T_ACCENT : mot ? T_THEME : T_MID, kc = hot ? T_ACCENT : vc == T_DIM ? T_DIM : T_TEXT;
+    const aafont_t *vf = &AF_M;
+    int32_t room = PR_CELL_W - 36, uw = unit[0] ? text_w(&AF_S, unit) + 3 : 0, x;
+    cv_begin(PR_CELL_W, PR_CELL_H + 3, T_BG);
+    cv_rrect(0, 0, PR_CELL_W, PR_CELL_H, 4, T_SURF, T_BG);
+    if (!label[0] && !val[0]) {                         /* a knob that does nothing on this page */
+        cv_blit((uint32_t)PR_CELL_X(c), (uint32_t)PR_CELL_Y(c));
+        return;
+    }
+    cv_rrect(3, 3, 24, 24, 12, T_RAISE, T_SURF);        /* the knob: its ring, its cap, the pointer */
+    cv_rrect(6, 6, 18, 18, 9, vc == T_DIM ? T_KEY : T_BG, T_RAISE);
+    if (ratio >= 0) {
+        int32_t deg = ratio * 27 / 100 - 135;
+        uint32_t ph = (uint32_t)(deg * 11930464);
+        int32_t dx = osc_sine(ph) * 7 / 32768, dy = -osc_sine(ph + 0x40000000u) * 7 / 32768;
+        cv_line_t(15, 15, 15 + dx, 15 + dy, kc, 2);
+    } else {
+        cv_rrect(13, 13, 4, 4, 2, kc, T_BG);
+    }
+    if (label[0])
+        cv_text_fit(33, 2, &AF_S, label, lc, T_SURF, room);
+    if (kid >= 0) {
+        cv_keycap(33, 13, (uint32_t)kid, vc == T_ACCENT || vc == T_DIM ? vc : T_KEY, T_INK, T_SURF);
+    } else if (val[0]) {
+        if (text_w(vf, val) + uw > room)
+            vf = &AF_S;
+        x = cv_text_fit(33, vf == &AF_M ? 13 : 16, vf, val, vc, T_SURF, room - uw);
+        if (unit[0])
+            cv_text_on(x + 3, 16, &AF_S, unit, T_MID, T_SURF);
+    }
+    cv_blit((uint32_t)PR_CELL_X(c), (uint32_t)PR_CELL_Y(c));
+}
+
 /* one card = one knob: [icon] LABEL / value unit / gauge on a SURF card, redrawn only when it changed.
  * The value is M, or S when M is too wide (engine names, long ENUMs); the unit S after it. The gauge is
  * a 3 px rounded bar: BG track, THEME fill. The knob just turned (hot): icon, label, value and gauge in
@@ -689,7 +734,7 @@ static void draw_column(uint32_t c, const char *label, const char *val, const ch
     }
     sig = (uint8_t)str_hash(str_hash(song.sel + TSEL->eng_req * 4u + ux.gen * 64u, label), unit);
     snap = ui.force || sig != ui.roll[c].sig;           /* what the value is of: label, unit, track, engine, palette */
-    if (kind == LK_TALL)
+    if (kind == LK_TALL || kind == LK_PROTO)
         ui.roll[c].from[0] = 0;                         /* (a tall card: no rolling digits) */
     strip = !snap && str_eq(key, ui.col[c]);
     if (strip && !ui.roll[c].from[0])
@@ -712,6 +757,10 @@ static void draw_column(uint32_t c, const char *label, const char *val, const ch
         else if (snap)
             ui.roll[c].from[0] = 0;
         str_cpy(ui.col[c], key, sizeof ui.col[c]);
+        if (kind == LK_PROTO) {
+            draw_column_proto(c, label, val, unit, vc, ratio, hot, mot, kid);
+            return;
+        }
         if (kind == LK_TALL) {
             draw_column_tall(c, label, val, unit, vc, ratio, icon, hot, mot, kid, &sp);
             return;

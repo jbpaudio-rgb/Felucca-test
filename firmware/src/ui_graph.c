@@ -877,18 +877,18 @@ static void graph_fm6(const track_t *t, uint16_t c, uint32_t sel)
         cv_text_in(x[k] - 10, y[k] + CAP_IN(S, FM_BH), 21, &AF_S, n, fill_c || k == sel ? T_INK : on ? f : T_DIM, fill);
     }
     FM6_CHART_HOOK(FMH_LABEL, 0, 0);
-    cv_text(10, 4 - GOY, &AF_S, b, hot == P_E0 || hot == P_E7 ? T_ACCENT : T_MID);
+    cv_text(10, 4 - cv_oy, &AF_S, b, hot == P_E0 || hot == P_E7 ? T_ACCENT : T_MID);
     if (sel < 6u) {                                  /* the operator picked: "OP3 x1.50" */
         char fq[16] = {'O', 'P', (char)('1' + sel), ' ', 0};
         fop_freq(pt + (5u - sel) * FP_OP, fq + 4);
-        cv_text_r(228, 4 - GOY, &AF_S, fq, T_TEXT, T_SURF);
+        cv_text_r(228, 4 - cv_oy, &AF_S, fq, T_TEXT, T_SURF);
     } else if (fm6_bank_slot(fm6_slot[(t - trk) % NTRK]) >= 0) {   /* SLOT B1..B32: the bank voice's name */
         char nm[11];
         for (k = 0; k < 10u; k++)
             nm[k] = (char)pt[FP_NAME + k];
         for (nm[10] = 0; k && nm[k - 1] == ' '; k--)
             nm[k - 1] = 0;
-        cv_text_r(228, 4 - GOY, &AF_S, nm, T_TEXT, T_SURF);
+        cv_text_r(228, 4 - cv_oy, &AF_S, nm, T_TEXT, T_SURF);
     }
     FM6_CHART_HOOK(FMH_END, alg, 0);
 }
@@ -924,13 +924,13 @@ static void graph_fm6env(const track_t *t, uint16_t c)
     fm_dot(x[k], y[k], T_ACCENT);
 #undef FEGY
 #undef FEGW
-    cv_text(10, 4 - GOY, &AF_S, b, T_MID);
+    cv_text(10, 4 - cv_oy, &AF_S, b, T_MID);
     str_cpy(b, STG[sg], sizeof b);
     str_cpy(b + str_len(b), "  R ", 5);
     fmt_int(b + str_len(b), op[FP_R1 + sg]);
     str_cpy(b + str_len(b), "  L ", 5);
     fmt_int(b + str_len(b), op[FP_L1 + sg]);
-    cv_text_r(228, 4 - GOY, &AF_S, b, T_TEXT, T_SURF);
+    cv_text_r(228, 4 - cv_oy, &AF_S, b, T_TEXT, T_SURF);
 }
 
 #if FELUCCA_FM4
@@ -2283,7 +2283,7 @@ static void draw_graph(void)
     cv_begin(240, graph_h(), T_BG);
     cv_rrect(3, 0, 234, graph_h(), 5, T_SURF, T_BG);   /* the panel (MENU > LARGE: the strip) */
     cv_bg = T_SURF;                                  /* (text drawn with cv_text lands on it) */
-    cv_oy = GOY;                                     /* graphs on a 100 px scale */
+    cv_oy = large_kind() == LK_PROTO ? 1 : GOY;      /* graphs on a 100 px scale */
     if (strip_kind() != SK_NONE) {                   /* MENU > LARGE: the strip */
         uint32_t k = strip_kind();
         cv_oy = k == SK_ADSR || k == SK_LFO ? 3 : 0;
