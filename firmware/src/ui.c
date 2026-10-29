@@ -399,8 +399,10 @@ static uint32_t act_cols(void);
 static int proto_page(void)
 {
     uint32_t g;
-    if (!FELUCCA_PROTO || ui.layer || ui.home || ui.menu || ui.confirm)
+    if (!FELUCCA_PROTO || ui.layer || ui.menu || ui.confirm)
         return 0;
+    if (ui.home)                                       /* HOME: its four knobs and the scope (not HOME > TRACKS' rows) */
+        return !home_tracks();
     g = cur_page()->graph;
     if (cur_page()->scope == SC_TRK || detail_on() || act_cols() || ui.ml.on)
         return 0;

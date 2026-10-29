@@ -327,7 +327,9 @@ static void draw_head_proto(void)
     char ti[24];
     uint32_t sig;
     int32_t n;
-    if (cur_page()->fam == FAM_EDIT)
+    if (ui.home)
+        str_cpy(ti, "HOME", sizeof ti);
+    else if (cur_page()->fam == FAM_EDIT)
         str_cpy(ti, ENGINES[TSEL->eng_req % NENGINES]->name, sizeof ti);
     else
         page_title(ti);
