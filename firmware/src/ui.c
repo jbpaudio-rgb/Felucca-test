@@ -425,8 +425,15 @@ static uint32_t layer_btn(void);
  * track's (its patch's operators, ui_fm6op.c) */
 static int page_visible(uint32_t i)
 {
-    if (PAGES[i].scope == SC_TRACK && PAGES[i].id[0] >= P_LN0 && PAGES[i].id[0] <= P_LN7)
+    if (PAGES[i].scope == SC_TRACK && PAGES[i].id[0] >= P_LN0 && PAGES[i].id[0] <= P_LN7) {
+        if (PAGES[i].fam == FAM_GLO)                  /* DRUM MIX: KIT's six lanes */
+#if FELUCCA_KIT
+            return ENGINES[TSEL->eng_req % NENGINES] == &ENG_KIT;
+#else
+            return 0;
+#endif
         return TSEL->eng_req % NENGINES == ENGI_DRUM;
+    }
     if (PAGES[i].id[0] == P_FTYPE)                    /* FILTER (1.5, #104): ANALOG's */
         return ENGINES[TSEL->eng_req % NENGINES] == &ENG_ANALOG;
     if (PAGES[i].graph >= GR_FMOP && PAGES[i].graph <= GR_FMENV)

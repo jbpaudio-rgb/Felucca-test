@@ -225,8 +225,15 @@ static const param_desc_t GP[G_COUNT] = {
     [G_DRREV] = PD("-", F_INT, 0, 0, 0),
 };
 
+static const param_desc_t KIT_LANE_DESC[6] = {PD("BD", F_PCT, 0, 127, 127), PD("SD", F_PCT, 0, 127, 127), PD("CLAP", F_PCT, 0, 127, 127),
+                                              PD("HATS", F_PCT, 0, 127, 127), PD("TOMS", F_PCT, 0, 127, 127), PD("PERC", F_PCT, 0, 127, 127)};
+
 static const param_desc_t *track_desc(const track_t *t, uint32_t id)
 {
+#if FELUCCA_KIT
+    if (id >= P_LN0 && id <= P_LN5 && ENGINES[eng_idx(t->eng_req)] == &ENG_KIT)   /* KIT's six lanes */
+        return &KIT_LANE_DESC[id - P_LN0];
+#endif
     if (id >= P_E0 && id <= P_E7) {                   /* the engine asked for (t->engine follows after a fade) */
         const engine_t *e = ENGINES[eng_idx(t->eng_req)];
         const param_desc_t *d = e->desc ? e->desc(t, id - P_E0) : 0;   /* a mode-dependent label / names */
@@ -481,6 +488,8 @@ static const page_t PAGES[] = {
     {"VOICE 3", FAM_EDIT, SC_TRACK, GR_NONE, {P_SPRD, 0xFF, 0xFF, 0xFF}},   /* #148: SPREAD */
     /* 1.2 (Discussion #153): a family's pages go round in this order, a tap of its button each (ui.c open_family) */
     {"SONG", FAM_GLO, SC_GLOBAL, GR_SONG, {0xFF, 0xFF, 0xFF, 0xFF}},        /* GLO's only page (1.2; up to 1.1.5 SEQ's) */
+    {"DRUM MIX", FAM_GLO, SC_TRACK, GR_NONE, {P_LN0, P_LN1, P_LN2, P_LN3}},   /* KIT only: the mixer, lanes 1..4 */
+    {"DRUM MIX 2", FAM_GLO, SC_TRACK, GR_NONE, {P_LN4, P_LN5, 0xFF, 0xFF}},   /* .. lanes 5, 6 */
     /* SAVE's taps (1.5, #173): USER (SAVE from another page: the quick save, SAVE OCT+ OCT+), PRESETS (the engines and
      * sounds one tap on; up to 1.4.1 the last), PHRASES, PROJECT, TOOLS */
     {"USER", FAM_SAVE, SC_GLOBAL, GR_USER, {0xFF, 0xFF, 0xFF, 0xFF}},       /* user presets: SLOT LOAD ERASE SAVE */
